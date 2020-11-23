@@ -21,26 +21,12 @@ esac done
 
 ### FUNCTIONS ###
 
-if type xbps-install >/dev/null 2>&1; then
-	installpkg(){ xbps-install -y "$1" >/dev/null 2>&1 ;}
-	grepseq="\"^[PGV]*,\""
-elif type apt >/dev/null 2>&1; then
-	installpkg(){ apt-get install -y "$1" >/dev/null 2>&1 ;}
-	grepseq="\"^[PGU]*,\""
-else
-	distro="arch"
 	installpkg(){ pacman --noconfirm --needed -S "$1" >/dev/null 2>&1 ;}
-	grepseq="\"^[PGA]*,\""
-fi
 
 error() { clear; printf "ERROR:\\n%s\\n" "$1"; exit;}
 
 welcomemsg() { \
 	dialog --title "Welcome!" --msgbox "Welcome to exitvelocity's install script\\n\\nThis script will automatically install a fully-featured Linux desktop, you will be more efficient - haxor.\\n\\n-Slappy" 10 60
-	}
-
-selectdotfiles() { \
-	edition="$(dialog --title "Select exvel version." --menu "Select which version of exvel you wish to have as default:" 10 70 2 dwm "The version of exvel(best) using suckless's dwm." i3 "The classic version of exvel using i3." custom "If you are supplying commandline options for exvel." 3>&1 1>&2 2>&3 3>&1)" || error "User exited."
 	}
 
 getuserandpass() { \
@@ -153,7 +139,6 @@ systembeepoff() { dialog --infobox "Getting rid of that retarded error beep soun
 
 finalize(){ \
 	dialog --infobox "Preparing welcome message..." 4 50
-	echo "exec_always --no-startup-id notify-send -i ~/.local/share/larbs/larbs.png 'Welcome to exvel:' 'Press Super+F1 for the manual.' -t 10000"  >> "/home/$name/.config/i3/config"
 	dialog --title "All done!" --msgbox "Congrats! Provided there were no hidden errors, the script completed successfully and all the programs and configuration files should be in place.\\n\\nTo run the new graphical environment, log out and log back in as your new user, then run the command \"startx\" to start the graphical environment (it will start automatically in tty1).\\n\\n.t exvel" 12 80
 	}
 
@@ -166,7 +151,6 @@ installpkg dialog || error "Are you sure you're running this as the root user an
 
 # Welcome user and pick dotfiles.
 welcomemsg || error "User exited."
-selectdotfiles || error "User exited."
 
 # Get and verify username and password.
 getuserandpass || error "User exited."
@@ -179,36 +163,38 @@ preinstallmsg || error "User exited."
 
 ### The rest of the script requires no user input.
 
-adduserandpass || error "Error adding username and/or password."
 
 # Refresh Arch keyrings.
-# refreshkeys || error "Error automatically refreshing Arch keyring. Consider doing so manually."
+ refreshkeys || error "Error automatically refreshing Arch keyring. Consider doing so manually."
 
-dialog --title "exvel Installation" --infobox "Installing \`basedevel\` and \`git\` for installing other software required for the installation of other programs." 5 70
-installpkg curl
-installpkg base-devel
-installpkg git
-installpkg ntp
+for x in curl base-devel git ntp zsh; do
+	dialog --title "Exvel Installation" --infobox "Installing \'$x\' which
+	is required to install and configure other programs." 5 70
+	installpkg "$x"
+done
 
-dialog --title "exvel Installation" --infobox "Synchronizing system time to ensure successful and secure installation of software..." 4 70
+dialog --title "exvel Installation" --infobox "Synchronizing system time to
+	ensure successful and secure installation of software..." 4 70
 ntpdate 0.us.pool.ntp.org >/dev/null 2>&1
 
-[ "$distro" = arch ] && { \
+adduserandpass || error "Error adding username and/or password."
+
 	[ -f /etc/sudoers.pacnew ] && cp /etc/sudoers.pacnew /etc/sudoers # Just in case
 
-	# Allow user to run sudo without password. Since AUR programs must be installed
-	# in a fakeroot environment, this is required for all builds with AUR.
+# Allow user to run sudo without password. Since AUR programs must be installed
+# in a fakeroot environment, this is required for all builds with AUR.
 	newperms "%wheel ALL=(ALL) NOPASSWD: ALL"
 
 	# Make pacman and yay colorful and adds eye candy on the progress bar because why not.
 	grep "^Color" /etc/pacman.conf >/dev/null || sed -i "s/^#Color$/Color/" /etc/pacman.conf
-	grep "ILoveCandy" /etc/pacman.conf >/dev/null || sed -i "/#VerbosePkgLists/a ILoveCandy" /etc/pacman.conf
+	grep "ILoveCandy" /etc/pacman.conf >/dev/null || sed -i "/#VerbosePkgLists/a
+	ILoveCandy" /etc/pacman.conf
 
 	# Use all cores for compilation.
 	sed -i "s/-j2/-j$(nproc)/;s/^#MAKEFLAGS/MAKEFLAGS/" /etc/makepkg.conf
 
 	manualinstall $aurhelper || error "Failed to install AUR helper."
-	}
+
 
 # The command that does all the installing. Reads the progs.csv file and
 # installs each needed program the way required. Be sure to run this only after
@@ -238,10 +224,9 @@ killall pulseaudio; sudo -u "$name" pulseaudio --start
 
 # This line, overwriting the `newperms` command above will allow the user to run
 # serveral important commands, `shutdown`, `reboot`, updating, etc. without a password.
-[ "$distro" = arch ] && newperms "%wheel ALL=(ALL) ALL #INTERLOPER
+newperms "%wheel ALL=(ALL) ALL #INTERLOPER
 %wheel ALL=(ALL) NOPASSWD: /usr/bin/shutdown,/usr/bin/reboot,/usr/bin/systemctl suspend,/usr/bin/wifi-menu,/usr/bin/mount,/usr/bin/umount,/usr/bin/pacman -Syu,/usr/bin/pacman -Syyu,/usr/bin/packer -Syu,/usr/bin/packer -Syyu,/usr/bin/systemctl restart NetworkManager,/usr/bin/rc-service NetworkManager restart,/usr/bin/pacman -Syyu --noconfirm,/usr/bin/loadkeys,/usr/bin/yay,/usr/bin/pacman -Syyuw --noconfirm"
 
 # Last message! Install complete!
 finalize
 clear
-e
