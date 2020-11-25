@@ -79,7 +79,7 @@ manualinstall() { # Installs $1 manually if not installed. Used only for AUR hel
 	sudo -u "$name" tar -xvf "$1".tar.gz >/dev/null 2>&1 &&
 	cd "$1" &&
 	sudo -u "$name" makepkg --noconfirm -si >/dev/null 2>&1
-	cd /tmp || return 1 ;}
+		cd /tmp || return 1) ;}
 
 maininstall() { # Installs all needed programs from main repo.
 	dialog --title "exvel Installation" --infobox "Installing \`$1\` ($n of $total). $1 $2" 5 70
