@@ -224,6 +224,9 @@ killall pulseaudio; sudo -u "$name" pulseaudio --start
 newperms "%wheel ALL=(ALL) ALL #INTERLOPER
 %wheel ALL=(ALL) NOPASSWD: /usr/bin/shutdown,/usr/bin/reboot,/usr/bin/systemctl suspend,/usr/bin/wifi-menu,/usr/bin/mount,/usr/bin/umount,/usr/bin/pacman -Syu,/usr/bin/pacman -Syyu,/usr/bin/packer -Syu,/usr/bin/packer -Syyu,/usr/bin/systemctl restart NetworkManager,/usr/bin/rc-service NetworkManager restart,/usr/bin/pacman -Syyu --noconfirm,/usr/bin/loadkeys,/usr/bin/yay,/usr/bin/pacman -Syyuw --noconfirm"
 
+# Enable zsh-git-prompt / vcs at command line right prompt
+git clone https://github.com/oliververdier/zsh-git-prompt.git "$XDG_CONFIG_HOME:-$HOME/.config/zsh/"
+
 # Last message! Install complete!
 finalize
 clear
