@@ -49,7 +49,7 @@ usercheck() { \
 	}
 
 preinstallmsg() { \
-	dialog --title "Let's begin launch sequence!" --yes-label "Kick the tires and light the fires!" --no-label "No, abort launch!" --yesno "The rest of the installation will now be like a good zero G nap, so kick your feet up comrade.\\n\\nIt will take some time, but when done, you can surf the interwebs like a boss.\\n\\nNow just press <Let's go!> and the system will begin installation!" 13 60 || { clear; exit 1; }
+	dialog --title "Let's begin launch sequence!" --yes-label "Kick the tires and light the fires!" --no-label "No, abort launch!" --yesno "The rest of the installation will now be like a good zero G nap, so kick your feet up comrade.\\n\\nIt will take some time, but when done, you can surf the interwebs like a boss.\\n\\nNow just press <Kick the tires and light the fires!!> and the system will begin installation!" 13 70 || { clear; exit 1; }
 	}
 
 adduserandpass() { \
