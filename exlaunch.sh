@@ -5,21 +5,20 @@
 
 ### OPTIONS AND VARIABLES ###
 
-while getopts ":a:r:b:p:h" o; do case "${o}" in
-	h) printf "Optional arguments for custom use:\\n  -r: Dotfiles repository
-	(local file or url)\\n  -p: Dependencies and programs csv (local file or
-	url)\\n  -a: AUR helper (must have pacman-like syntax)\\n  -h: Show this
-	message\\n" && exit 1 ;;
-	r) dotfilesrepo=${OPTARG} && git ls-remote "$dotfilesrepo" || exit 1 ;;
-	b) repobranch=${OPTARG} ;;
-	p) progsfile=${OPTARG} ;;
-	a) aurhelper=${OPTARG} ;;
-	*) printf "Invalid option: -%s\\n" "$OPTARG" && exit 1 ;;
-esac done
+#while getopts ":a:r:b:p:h" o; do case "${o}" in
+#	h) printf "Optional arguments for custom use:\\n  -r: Dotfiles repository
+#	(local file or url)\\n  -p: Dependencies and programs csv (local file or
+#	url)\\n  -a: AUR helper (must have pacman-like syntax)\\n  -h: Show this
+#	message\\n" && exit 1 ;;
+#	r) dotfilesrepo=${OPTARG} && git ls-remote "$dotfilesrepo" || exit 1 ;;
+#	b) repobranch=${OPTARG} ;;
+#	p) progsfile=${OPTARG} ;;
+#	a) aurhelper=${OPTARG} ;;
+#	*) printf "Invalid option: -%s\\n" "$OPTARG" && exit 1 ;;
+#esac done
 
 [ -z "$dotfilesrepo" ] && dotfilesrepo="https://github.com/slappy96/exvel.git"
-[ -z "$progsfile" ] && progsfile="https://raw.githubusercontent.com/slappy96/
-exlaunch/master/progs.csv"
+[ -z "$progsfile" ] && progsfile="https://raw.githubusercontent.com/slappy96/exlaunch/master/progs.csv"
 [ -z "$aurhelper" ] && aurhelper="yay"
 [ -z "$repobranch" ] && repobranch="master"
 
@@ -29,31 +28,25 @@ installpkg(){ pacman --noconfirm --needed -S "$1" >/dev/null 2>&1 ;}
 
 error() { clear; printf "ERROR:\\n%s\\n" "$1" >&2; exit 1;}
 
-welcomemsg() { \
-	dialog --title "Welcome!" --msgbox "Welcome to exitvelocity's install
-	script\\n\\nThis script will automatically install a fully-featured Linux
-	desktop, you will be more efficient - haxor.\\n\\n-Slappy" 10 60
+welcomemsg() { dialog --title "Welcome!" --msgbox "Welcome to exitvelocity's install script\\n\\nThis script will automatically install a fully-featured Linux
+desktop, you will be more efficient - haxor.\\n\\n-Slappy" 10 60
 	}
 
 getuserandpass() { \
 	# Prompts user for new username an password.
-	name=$(dialog --inputbox "First, please enter a name for the user account."
-	10 60 3>&1 1>&2 2>&3 3>&1) || exit 1
-	while ! echo "$name" | grep -q "^[a-z_][a-z0-9_-]*$"; do
-	name=$(dialog --no-cancel --inputbox "Username not valid. Give a username
-	beginning with a letter, with only lowercase letters, - or _." 10 60 3>&1
-	1>&2 2>&3 3>&1)
-	done
-	pass1=$(dialog --no-cancel --passwordbox "Enter a password for that user."
-	10 60 3>&1 1>&2 2>&3 3>&1)
-	pass2=$(dialog --no-cancel --passwordbox "Retype password." 10 60 3>&1
-	1>&2 2>&3 3>&1)
-	while ! [ "$pass1" = "$pass2" ]; do
-		unset pass2
-		pass1=$(dialog --no-cancel --passwordbox "Passwords do not match.\\n\\n
-		Enter password again." 10 60 3>&1 1>&2 2>&3 3>&1)
-		pass2=$(dialog --no-cancel --passwordbox "Retype password." 10 60 3>&1
-		1>&2 2>&3 3>&1) done ;}
+name=$(dialog --inputbox "First, please enter a name for the user account." 10 60 3>&1 1>&2 2>&3 3>&1) || exit 1
+while ! echo "$name" | grep -q "^[a-z_][a-z0-9_-]*$"; do
+   name=$(dialog --no-cancel --inputbox "Username not valid. Give a username
+   beginning with a letter, with only lowercase letters, - or _." 10 60 3>&1 1>&2 2>&3 3>&1)
+done
+pass1=$(dialog --no-cancel --passwordbox "Enter a password for that user." 10 60 3>&1 1>&2 2>&3 3>&1)
+pass2=$(dialog --no-cancel --passwordbox "Retype password." 10 60 3>&1 1>&2 2>&3 3>&1)
+while ! [ "$pass1" = "$pass2" ]; do
+   unset pass2
+   pass1=$(dialog --no-cancel --passwordbox "Passwords do not match.\\n\\n
+   Enter password again." 10 60 3>&1 1>&2 2>&3 3>&1)
+   pass2=$(dialog --no-cancel --passwordbox "Retype password." 10 60 3>&1 1>&2 2>&3 3>&1)
+done ;}
 
 usercheck() { \
 	! { id -u "$name" >/dev/null 2>&1; } ||
@@ -121,7 +114,7 @@ gitmakeinstall() {
 	dialog --title "exvel Installation" --infobox "Installing \`$progname\`
 	($n of $total) via \`git\` and \`make\`. $(basename "$1") $2" 5 70
 	sudo -u "$name" git clone --depth 1 "$1" "$dir" >/dev/null 2>&1 ||
-	{ cd "$dir" || return 1 ; sudo -u "$name" git pull --force origin master;}
+        { cd "$dir" || return 1 ; sudo -u "$name" git pull --force origin master;}
 	cd "$dir" || exit 1
 	make >/dev/null 2>&1
 	make install >/dev/null 2>&1
@@ -158,8 +151,7 @@ installationloop() { \
 		esac
 	done < /tmp/progs.csv ;}
 
-putgitrepo() { # Downloads a gitrepo $1 and places the files in $2 only
-	overwriting conflicts
+putgitrepo() { # Downloads a gitrepo $1 and places the files in $2 only overwriting conflicts
 	dialog --infobox "Downloading and installing config files..." 4 60
 	[ -z "$3" ] && branch="master" || branch="$repobranch"
 	dir=$(mktemp -d)
@@ -209,8 +201,7 @@ preinstallmsg || error "User exited."
 
 
 # Refresh Arch keyrings.
-refreshkeys || error "Error automatically refreshing Arch keyring. Consider
-doing so manually."
+refreshkeys || error "Error automatically refreshing Arch keyring. Consider doing so manually."
 
 for x in curl base-devel git ntp zsh; do
 	dialog --title "Exvel Installation" --infobox "Installing \'$x\' which
