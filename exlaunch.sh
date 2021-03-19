@@ -61,12 +61,8 @@ usercheck() { \
 	}
 
 preinstallmsg() { \
-	dialog --title "Let's begin launch sequence!" --yes-label "Kick the tires
-	and light the fires!" --no-label "No, abort launch!" --yesno "The rest of
-	the installation will now be like a good zero G nap, so kick your feet up
-	comrade.\\n\\nIt will take some time, but when done, you can surf the
-	interwebs like a boss.\\n\\nNow just press <Kick the tires and light the
-	fires!!> and the system will begin installation!" 13 70 || { clear; exit
+	dialog --title "Let's begin launch sequence!" --yes-label "Light the fires!" --no-label "No, abort launch!" --yesno "The rest of the installation will now be like a good zero G nap, so kick your feet up comrade.\\n\\nIt will take some time, but when done, you can surf the interwebs like a boss.\\n\\nNow just press <Kick the tires and light the
+	fires!!> and the system will begin installation!" 15 80 || { clear; exit
 	1; }
 	}
 
@@ -92,12 +88,10 @@ newperms() { # Set special sudoers settings for install (or after).
 
 manualinstall() { # Installs $1 manually if not installed. Used only for AUR
 	# helper here.
-	[ -f "/usr/bin/$1" ] || (
-	dialog --infobox "Installing \"$1\", an AUR helper..." 4 50
+	[ -f "/usr/bin/$1" ] || (dialog --infobox "Installing \"$1\", an AUR helper..." 4 50
 	cd /tmp || exit 1
 	rm -rf /tmp/"$1"*
-	curl -sO https://aur.archlinux.org/cgit/aur.git/snapshot/"$1".tar.gz &&
-	sudo -u "$name" tar -xvf "$1".tar.gz >/dev/null 2>&1 &&
+	curl -sO https://aur.archlinux.org/cgit/aur.git/snapshot/"$1".tar.gz && sudo -u "$name" tar -xvf "$1".tar.gz >/dev/null 2>&1 &&
 	cd "$1" &&
 	sudo -u "$name" makepkg --noconfirm -si >/dev/null 2>&1
 	cd /tmp || return 1) ;}
@@ -135,14 +129,12 @@ pipinstall() { \
 	}
 
 installationloop() { \
-	([ -f "$progsfile" ] && cp "$progsfile" /tmp/progs.csv) || curl -Ls
-	"$progsfile" | sed '/^#/d' > /tmp/progs.csv
+	([ -f "$progsfile" ] && cp "$progsfile" /tmp/progs.csv) || curl -Ls "$progsfile" | sed '/^#/d' > /tmp/progs.csv
 	total=$(wc -l < /tmp/progs.csv)
 	aurinstalled=$(pacman -Qqm)
 	while IFS=, read -r tag program comment; do
 		n=$((n+1))
-		echo "$comment" | grep -q "^\".*\"$" && comment="$(echo "$comment"
-		| sed "s/\(^\"\|\"$\)//g")"
+		echo "$comment" | grep -q "^\".*\"$" && comment="$(echo "$comment" | sed "s/\(^\"\|\"$\)//g")"
 		case "$tag" in
 			"A") aurinstall "$program" "$comment" ;;
 			"G") gitmakeinstall "$program" "$comment" ;;
