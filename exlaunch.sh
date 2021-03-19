@@ -97,18 +97,15 @@ manualinstall() { # Installs $1 manually if not installed. Used only for AUR
 	cd /tmp || return 1) ;}
 
 maininstall() { # Installs all needed programs from main repo.
-	dialog --title "exvel Installation" --infobox "Installing \`$1\` ($n of
-	$total). $1 $2" 5 70
+	dialog --title "exvel Installation" --infobox "Installing \`$1\` ($n of $total). $1 $2" 5 70
 	installpkg "$1"
 	}
 
 gitmakeinstall() {
 	progname="$(basename "$1" .git)"
 	dir="$repodir/$progname"
-	dialog --title "exvel Installation" --infobox "Installing \`$progname\`
-	($n of $total) via \`git\` and \`make\`. $(basename "$1") $2" 5 70
-	sudo -u "$name" git clone --depth 1 "$1" "$dir" >/dev/null 2>&1 ||
-        { cd "$dir" || return 1 ; sudo -u "$name" git pull --force origin master;}
+	dialog --title "exvel Installation" --infobox "Installing \`$progname\` ($n of $total) via \`git\` and \`make\`. $(basename "$1") $2" 5 70
+	sudo -u "$name" git clone --depth 1 "$1" "$dir" >/dev/null 2>&1 || { cd "$dir" || return 1 ; sudo -u "$name" git pull --force origin master;}
 	cd "$dir" || exit 1
 	make >/dev/null 2>&1
 	make install >/dev/null 2>&1
@@ -149,8 +146,7 @@ putgitrepo() { # Downloads a gitrepo $1 and places the files in $2 only overwrit
 	dir=$(mktemp -d)
 	[ ! -d "$2" ] && mkdir -p "$2"
 	chown -R "$name":wheel "$dir" "$2"
-	sudo -u "$name" git clone --recursive -b "$branch" --depth 1 "$1"
-	"$dir" >/dev/null 2>&1
+	sudo -u "$name" git clone --recursive -b "$branch" --depth 1 --recurse-submodules "$1" "$dir" >/dev/null 2>&1
 	sudo -u "$name" cp -rfT "$dir" "$2"
 	}
 
@@ -174,8 +170,7 @@ finalize(){ \
 ### This is how everything happens in an intuitive format and order.
 
 # Check if user is root on Arch distro. Install dialog.
-pacman --noconfirm --needed -Sy dialog || error "Are you sure you're running
-this as the root user and have an internet connection?"
+pacman --noconfirm --needed -Sy dialog || error "Are you sure you're running this as the root user and have an internet connection?"
 
 # Welcome user and pick dotfiles.
 welcomemsg || error "User exited."
@@ -216,8 +211,7 @@ newperms "%wheel ALL=(ALL) NOPASSWD: ALL"
 # Make pacman and yay colorful and adds eye candy on the progress bar because
 # why not.
 grep -q "^Color" /etc/pacman.conf || sed -i "s/^#Color$/Color/" /etc/pacman.conf
-grep -q "ILoveCandy" /etc/pacman.conf || sed -i "/#VerbosePkgLists/a ILoveCandy"
-/etc/pacman.conf
+grep -q "ILoveCandy" /etc/pacman.conf || sed -i "/#VerbosePkgLists/a ILoveCandy" /etc/pacman.conf
 
 # Use all cores for compilation.
 sed -i "s/-j2/-j$(nproc)/;s/^#MAKEFLAGS/MAKEFLAGS/" /etc/makepkg.conf
@@ -254,13 +248,13 @@ killall pulseaudio; sudo -u "$name" pulseaudio --start
 # Install systemd boot
 sudo bootctl install
 # create loader.conf for boot menu
-printf "default arch\n\
+sudo printf "default arch\n\
 timeout 5"\
 > /boot/loader/loader.conf
 # Pull UUID or PART UUID and write boot entry
 MAIN_UUID="$(lsblk -f | grep '/$' | awk '{ print $4 }')"
 PART_UUID="$(blkid | grep "$MAIN_UUID" | awk '{ print $7 }' | tr -d '"' )"
-printf "title Archlinux\n\
+sudo printf "title Archlinux\n\
 linux /vmlinuz-linux\n\
 initrd /amd-ucode.img\n\
 initrd /initramfs-linux.img\n\
