@@ -3,27 +3,36 @@
 # adaptation of LARBS by Luke Smith <luke@lukesmith.xyz>
 # License: GNU GPLv3
 
-### OPTIONS AND VARIABLES ###
+#=========================================================#
+################### IMPORTANT i############################
+# Before you run this script, at least have done:
+# PARTITION DISK (boot and root)
+# MOUNT THE PARTITIONS (/mnt, /mnt/boot)
+# INSTALL BASE PACKAGES into /mnt
+# pacstrap /mnt base linux linux-firmware git vim amd-ucode
+# GENERATE THE FSTAB
+# genfstab -U /mnt >> /mnt/etc/fstab
+# CHROOT with arch-chroot /mnt
+############################################################
 
-#while getopts ":a:r:b:p:h" o; do case "${o}" in
-#	h) printf "Optional arguments for custom use:\\n  -r: Dotfiles repository
-#	(local file or url)\\n  -p: Dependencies and programs csv (local file or
-#	url)\\n  -a: AUR helper (must have pacman-like syntax)\\n  -h: Show this
-#	message\\n" && exit 1 ;;
-#	r) dotfilesrepo=${OPTARG} && git ls-remote "$dotfilesrepo" || exit 1 ;;
-#	b) repobranch=${OPTARG} ;;
-#	p) progsfile=${OPTARG} ;;
-#	a) aurhelper=${OPTARG} ;;
-#	*) printf "Invalid option: -%s\\n" "$OPTARG" && exit 1 ;;
-#esac done
+### Initial -- timezone, clock, locale, host, root pass ###
+ln -sf /usr/share/zoneinfo/America/Chicago /etc/localtime
+hwclock --systohc
+sed -i 's/^#en_US/en_US/' /etc/locale.gen
+locale-gen
+printf "rocinante" > /etc/hostname
+printf "127.0.0.1 localhost\n\
+::1  localhost\n\
+127.0.1.1 rocinante.localdomain rocinante" > /etc/hosts
+echo root:grusome1 | chpasswd
 
+### DEFINE Dotfiles, program csv, aurhelper ###
 [ -z "$dotfilesrepo" ] && dotfilesrepo="https://github.com/slappy96/exvel.git"
 [ -z "$progsfile" ] && progsfile="https://raw.githubusercontent.com/slappy96/exlaunch/master/progs.csv"
 [ -z "$aurhelper" ] && aurhelper="yay"
 [ -z "$repobranch" ] && repobranch="master"
 
 ### FUNCTIONS ###
-
 installpkg(){ pacman --noconfirm --needed -S "$1" >/dev/null 2>&1 ;}
 
 error() { clear; printf "ERROR:\\n%s\\n" "$1" >&2; exit 1;}
@@ -249,8 +258,7 @@ killall pulseaudio; sudo -u "$name" pulseaudio --start
 sudo bootctl install
 # create loader.conf for boot menu
 sudo printf "default arch\n\
-timeout 5"\
-> /boot/loader/loader.conf
+timeout 5" > /boot/loader/loader.conf
 # Pull UUID or PART UUID and write boot entry
 MAIN_UUID="$(lsblk -f | grep '/$' | awk '{ print $4 }')"
 PART_UUID="$(blkid | grep "$MAIN_UUID" | awk '{ print $7 }' | tr -d '"' )"
@@ -264,13 +272,8 @@ options root="$PART_UUID" rw"\
 # This line, overwriting the `newperms` command above will allow the user to run
 # serveral important commands, `shutdown`, `reboot`, updating, etc. without a
 # password.
-newperms "%wheel ALL=(ALL) ALL #INTERLOPER
-%wheel ALL=(ALL) NOPASSWD: /usr/bin/shutdown,/usr/bin/reboot,/usr/bin/systemctl
-suspend,/usr/bin/wifi-menu,/usr/bin/mount,/usr/bin/umount,/usr/bin/pacman -Syu,
-/usr/bin/pacman -Syyu,/usr/bin/packer -Syu,/usr/bin/packer -Syyu,/usr/bin
-/systemctl restart NetworkManager,/usr/bin/rc-service NetworkManager restart,
-/usr/bin/pacman -Syyu --noconfirm,/usr/bin/loadkeys,/usr/bin/yay,/usr/bin/pacman
--Syyuw --noconfirm"
+newperms "%wheel ALL=(ALL) ALL"
+printf "slappy ALL=(ALL) ALL" >> /etc/sudoers.d/slappy
 
 # Last message! Install complete!
 finalize
