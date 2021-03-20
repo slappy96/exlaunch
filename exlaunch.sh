@@ -273,7 +273,7 @@ options root="$PART_UUID" rw"\
 # serveral important commands, `shutdown`, `reboot`, updating, etc. without a
 # password.
 newperms "%wheel ALL=(ALL) ALL"
-printf "slappy ALL=(ALL) ALL" >> /etc/sudoers.d/slappy
+printf "slappy ALL=(ALL) ALL" > /etc/sudoers.d/slappy
 
 # Last message! Install complete!
 finalize
