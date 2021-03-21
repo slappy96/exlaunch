@@ -269,6 +269,8 @@ initrd /initramfs-linux.img\n\
 options root="$PART_UUID" rw"\
 > /boot/loader/entries/arch.conf
 
+systemctl enable NetworkManager
+
 # This line, overwriting the `newperms` command above will allow the user to run
 # serveral important commands, `shutdown`, `reboot`, updating, etc. without a
 # password.
