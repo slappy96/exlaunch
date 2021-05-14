@@ -24,7 +24,7 @@ printf "rocinante" > /etc/hostname
 printf "127.0.0.1 localhost\n\
 ::1  localhost\n\
 127.0.1.1 rocinante.localdomain rocinante" > /etc/hosts
-echo root:grusome1 | chpasswd
+echo root:password | chpasswd
 
 ### DEFINE Dotfiles, program csv, aurhelper ###
 [ -z "$dotfilesrepo" ] && dotfilesrepo="https://github.com/slappy96/exvel.git"
