@@ -262,12 +262,14 @@ timeout 5" > /boot/loader/loader.conf
 # Pull UUID or PART UUID and write boot entry
 MAIN_UUID="$(lsblk -f | grep '/$' | awk '{ print $4 }')"
 PART_UUID="$(blkid | grep "$MAIN_UUID" | awk '{ print $7 }' | tr -d '"' )"
+#add "initrd /amd-ucode.img or /intel-ucode.img below
 sudo printf "title Archlinux\n\
 linux /vmlinuz-linux\n\
-initrd /amd-ucode.img\n\
 initrd /initramfs-linux.img\n\
 options root="$PART_UUID" rw"\
 > /boot/loader/entries/arch.conf
+
+systemctl enable NetworkManager
 
 # This line, overwriting the `newperms` command above will allow the user to run
 # serveral important commands, `shutdown`, `reboot`, updating, etc. without a
