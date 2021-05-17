@@ -16,15 +16,15 @@
 ############################################################
 
 ### Initial -- timezone, clock, locale, host, root pass ###
-ln -sf /usr/share/zoneinfo/America/Chicago /etc/localtime
-hwclock --systohc
-sed -i 's/^#en_US/en_US/' /etc/locale.gen
-locale-gen
-printf "rocinante" > /etc/hostname
-printf "127.0.0.1 localhost\n\
-::1  localhost\n\
-127.0.1.1 rocinante.localdomain rocinante" > /etc/hosts
-echo root:password | chpasswd
+#ln -sf /usr/share/zoneinfo/America/Chicago /etc/localtime
+#hwclock --systohc
+#sed -i 's/^#en_US/en_US/' /etc/locale.gen
+#locale-gen
+#printf "rocinante" > /etc/hostname
+#printf "127.0.0.1 localhost\n\
+#::1  localhost\n\
+#127.0.1.1 rocinante.localdomain rocinante" > /etc/hosts
+#echo root:password | chpasswd
 
 ### DEFINE Dotfiles, program csv, aurhelper ###
 dotfilesrepo="https://github.com/slappy96/exvel.git"
@@ -34,31 +34,33 @@ repobranch="master"
 
 ### FUNCTIONS ###
 installpkg(){ pacman --noconfirm --needed -S "$1" ;}
+
 error() { clear; printf "ERROR:\\n%s\\n" "$1"; exit 1;}
-welcomemsg() { echo "Welcome!\nWelcome to exitvelocity's install script\n\
+
+welcomemsg() { printf "Welcome to exitvelocity's install script\n\
 	This script will automatically install a fully-featured Linux\
-	desktop\n-Slappy");}
-getuserandpass() { read -p "Please enter a name for the user account: " name;\
+	desktop\n";}
+
+getuserandpass() { \
+	# Prompts user for new username an password.
+	read -p "Please enter a name for user account: " name || exit 1
 	while ! echo "$name" | grep -q "^[a-z_][a-z0-9_-]*$"; do
-		name=$(echo "Username not valid. Give a username beginning with a\
-		letter, with only lowercase letters, - or _." )
+		read -p "Please enter a name for user account lowercase: " name
 	done
-pass1=$(read -p "Enter a password for that user." pass_1;)
-pass2=$(read -p "Retype password." pass_2;)
-while ! [ "$pass1" = "$pass2" ]; do
-   unset pass2
-   pass1=$(read -p "Passwords do not match. Enter again " pass_1;)
-   pass2=$(read -p "Retype password." pass_2;)
-done ;}
+	read -s -p "Please enter a password: " pass1
+	read -s -p "Please retype password: " pass2
+	while ! [ "$pass1" = "$pass2" ]; do
+		unset pass2
+		read -s -p "Please enter a password: " pass1
+		read -s -p "Please retype password: " pass2
+	done ;}
 
 adduserandpass() { \
 	# Adds user `$name` with password $pass1.
-	printf("\nAdding user \$name\n");
+	printf "Adding user \$name\n";
 	useradd -m -g wheel -s /bin/zsh "$name" >/dev/null 2>&1 ||
-	usermod -a -G wheel "$name" && mkdir -p /home/"$name" && chown "$name":wheel
-	/home/"$name"
-	repodir="/home/$name/.local/src"; mkdir -p "$repodir"; chown -R "$name":wheel
-	"$(dirname "$repodir")"
+	usermod -a -G wheel "$name" && mkdir -p /home/"$name" && chown "$name":wheel /home/"$name"
+	repodir="/home/$name/.local/src"; mkdir -p "$repodir"; chown -R "$name":wheel "$(dirname "$repodir")"
 	echo "$name:$pass1" | chpasswd
 	unset pass1 pass2 ;}
 
@@ -78,7 +80,7 @@ manualinstall() { # Installs $1 manually if not installed. Used only for AUR
 	rm -rf /tmp/"$1"*
 	curl -sO https://aur.archlinux.org/cgit/aur.git/snapshot/"$1".tar.gz && sudo -u "$name" tar -xvf "$1".tar.gz >/dev/null 2>&1 &&
 	cd "$1" &&
-	sudo -u "$name" makepkg --noconfirm -si >/dev/null 2>&1
+	sudo -u "$name" makepkg --noconfirm -si
 	cd /tmp || return 1) ;}
 
 maininstall() { # Installs all needed programs from main repo.
@@ -92,15 +94,14 @@ gitmakeinstall() {
 	echo "exvel Installation\nInstalling \`$progname\` ($n of $total) via \`git\` and \`make\`. $(basename "$1") $2"
 	sudo -u "$name" git clone --depth 1 "$1" "$dir" >/dev/null 2>&1 || { cd "$dir" || return 1 ; sudo -u "$name" git pull --force origin master;}
 	cd "$dir" || exit 1
-	make >/dev/null 2>&1
-	make install >/dev/null 2>&1
+	make
+	make install
 	cd /tmp || return 1 ;}
 
 aurinstall() { \
-	echo "exvel Installation--Installing \`$1\` ($n of\
-	$total) from the AUR. $1 $2"
+	echo "exvel Installation--Installing \`$1\` ($n of $total) from the AUR. $1 $2"
 	echo "$aurinstalled" | grep -q "^$1$" && return 1
-	sudo -u "$name" $aurhelper -S --noconfirm "$1" >/dev/null 2>&1
+	sudo -u "$name" $aurhelper -S --noconfirm "$1"
 	}
 
 pipinstall() { \
@@ -130,21 +131,15 @@ putgitrepo() { # Downloads a gitrepo $1 and places the files in $2 only overwrit
 	dir=$(mktemp -d)
 	[ ! -d "$2" ] && mkdir -p "$2"
 	chown -R "$name":wheel "$dir" "$2"
-	sudo -u "$name" git clone --recursive -b "$branch" --depth 1 --recurse-submodules "$1" "$dir" >/dev/null 2>&1
+	sudo -u "$name" git clone --recursive -b "$branch" --depth 1 --recurse-submodules "$1" "$dir"
 	sudo -u "$name" cp -rfT "$dir" "$2"
 	}
 
 systembeepoff() { echo "Removing beep sound..."
-	rmmod pcspkr
 	echo "blacklist pcspkr" > /etc/modprobe.d/nobeep.conf ;}
 
 finalize(){ \
-	echo "Preparing welcome message..."
-	echo "All done!\nCongrats! Provided there were no hidden errors, the script\
-	completed successfully and all the programs and configuration files should\
-	be in place.\\n\\nTo run the new graphical environment, log out and log\
-	back in as your new user, then run the command \"startx\" to start the\
-	graphical environment (it will start automatically in tty1).\\n\\n"
+	echo "Congrats. You are ready to roll!"
 	}
 
 ### THE ACTUAL SCRIPT ###
@@ -152,7 +147,7 @@ finalize(){ \
 ### This is how everything happens in an intuitive format and order.
 
 # Check if user is root on Arch distro. Install dialog.
-pacman --noconfirm --needed -Sy || error "Please run as root"
+pacman --noconfirm --needed -Sy dialog || error "Please run as root"
 
 # Welcome user and pick dotfiles.
 welcomemsg || error "User exited."
@@ -197,8 +192,8 @@ manualinstall $aurhelper || error "Failed to install AUR helper."
 # and all build dependencies are installed.
 installationloop
 
-echo "Finally, installing \`libxft-bgra\` to enable color emoji in suckless software without crashes."
-yes | sudo -u "$name" $aurhelper -S libxft-bgra-git >/dev/null 2>&1
+#echo "Finally, installing \`libxft-bgra\` to enable color emoji in suckless software without crashes."
+#yes | sudo -u "$name" $aurhelper -S libxft-bgra-git >/dev/null 2>&1
 
 # Install the dotfiles in the user's home directory
 putgitrepo "$dotfilesrepo" "/home/$name" "$repobranch"
@@ -216,20 +211,20 @@ sudo -u "$name" mkdir -p "/home/$name/.cache/zsh/"
 # Start/restart PulseAudio.
 killall pulseaudio; sudo -u "$name" pulseaudio --start
 
-# Install systemd boot
-sudo bootctl install
-# create loader.conf for boot menu
-sudo printf "default arch\n\
-timeout 5" > /boot/loader/loader.conf
-# Pull UUID or PART UUID and write boot entry
-MAIN_UUID="$(lsblk -f | grep '/$' | awk '{ print $4 }')"
-PART_UUID="$(blkid | grep "$MAIN_UUID" | awk '{ print $7 }' | tr -d '"' )"
-#add "initrd /amd-ucode.img or /intel-ucode.img below
-sudo printf "title Archlinux\n\
-linux /vmlinuz-linux\n\
-initrd /initramfs-linux.img\n\
-options root="$PART_UUID" rw"\
-> /boot/loader/entries/arch.conf
+## Install systemd boot
+#sudo bootctl install
+## create loader.conf for boot menu
+#sudo printf "default arch\n\
+#timeout 5" > /boot/loader/loader.conf
+## Pull UUID or PART UUID and write boot entry
+#MAIN_UUID="$(lsblk -f | grep '/$' | awk '{ print $4 }')"
+#PART_UUID="$(blkid | grep "$MAIN_UUID" | awk '{ print $7 }' | tr -d '"' )"
+##add "initrd /amd-ucode.img or /intel-ucode.img below
+#sudo printf "title Archlinux\n\
+#linux /vmlinuz-linux\n\
+#initrd /initramfs-linux.img\n\
+#options root="$PART_UUID" rw"\
+#> /boot/loader/entries/arch.conf
 
 systemctl enable NetworkManager
 
@@ -241,4 +236,3 @@ printf "slappy ALL=(ALL) ALL" > /etc/sudoers.d/slappy
 
 # Last message! Install complete!
 finalize
-clear
